@@ -4,11 +4,12 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'api/realty', RealtyViewSet, basename='realty')
+
     
 urlpatterns = [
     path('api/user/<str:login>/', userDetail, name='userDetail'),
     path('api/auth/', login, name='login'), 
-    
+
     path('', include(router.urls)),
     path("Storage/Item/<str:itemId>", item, name="storageItem")
 ]

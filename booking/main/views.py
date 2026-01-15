@@ -4,9 +4,12 @@ from django.http import HttpResponse, Http404
 from backend.services import *
 from main.models import *
 from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
-from .serializers import RealtySerializer
-from .filters import RealtyFilter
+from .serializers import *
+from .filters import *
 from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -19,8 +22,28 @@ storageService = DiskStorageService()
 kdfService = PbKdfService()
 jwtService = JwtService()
 
+@api_view(['GET'])
 def userDetail(request, login: str):
-    pass
+    try:
+        user = (
+            UserAccess.objects
+            .select_related('user_data', 'user_role')
+            .prefetch_related(
+                'booking_items__realty',
+                'feedbacks__realty',
+                'user_data__cards'
+            )
+            .get(login=login, deleted_at__isnull=True)
+        )
+    except UserAccess.DoesNotExist:
+        return Response(
+            {'detail': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = UserDetailSerializer(user)
+    return Response(serializer.data)
+
 
 def authenticate(request):
     authorizationHeader = request.headers.get('Authorization') or request.META.get('HTTP_AUTHORIZATION')
@@ -121,10 +144,14 @@ def item(request, itemId):
 
 class RealtyViewSet(ModelViewSet):
     queryset = Realty.objects.filter(deleted_at__isnull=True)
-    serializer_class = RealtySerializer
-
     filter_backends = [DjangoFilterBackend]
     filterset_class = RealtyFilter
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return RealtyCreateSerializer
+        return RealtySerializer
+
 
 
     
