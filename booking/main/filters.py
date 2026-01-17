@@ -40,3 +40,13 @@ class FeedbackFilter(django_filters.FilterSet):
     class Meta:
         model = Feedback
         fields = ["realty", "min_rate"]
+
+
+class BookingItemFilter(django_filters.FilterSet):
+    user_access = django_filters.UUIDFilter(field_name="user_access_id")
+    start_date_after = django_filters.DateFilter(field_name="start_date", lookup_expr="gte")
+    end_date_before = django_filters.DateFilter(field_name="end_date", lookup_expr="lte")
+
+    class Meta:
+        model = BookingItem
+        fields = ["user_access", "start_date_after", "end_date_before"]

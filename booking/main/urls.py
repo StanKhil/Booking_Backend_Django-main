@@ -15,6 +15,9 @@ urlpatterns = [
     path('', include(router.urls)),
     path("Storage/Item/<str:itemId>", item, name="storageItem"),
     path("api/feedback/", FeedbackView.as_view(), name="feedback"),
+
+    path('api/booking-item', BookingView.as_view(), name='booking_item'),
+    path('api/booking-item/<uuid:id>/', BookingDetailView.as_view(), name='booking_item'),
 ]
 
 

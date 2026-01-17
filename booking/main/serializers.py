@@ -1,7 +1,33 @@
 from rest_framework import serializers
 from .models import *
 
+class CardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Card
+        fields = (
+            'id',
+            'number',
+            'cardholder_name',
+            'expiration_date',
+        )
+
+class UserDataSerializer(serializers.ModelSerializer):
+    cards = CardSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = UserData
+        fields = (
+            'id',
+            'first_name',
+            'last_name',
+            'email',
+            'birth_date',
+            'registered_at',
+            'cards',
+        )
+
 class FeedbackSerializer(serializers.ModelSerializer):
+    user_data = UserDataSerializer(source='user_access.user_data', read_only=True)
     class Meta:
         model = Feedback
         fields = (
@@ -10,7 +36,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
             'rate',
             'created_at',
             'updated_at',
-            'user_access',
+            'user_data',
         )
 
 class BookingItemSerializer(serializers.ModelSerializer):
@@ -77,7 +103,16 @@ class RealtyCreateSerializer(serializers.ModelSerializer):
 
         return realty
 
+class CountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
+        fields = (
+            'name',
+        )
+
+
 class CitySerializer(serializers.ModelSerializer):
+    country = CountrySerializer(read_only=True)
     class Meta:
         model = City
         fields = (
@@ -95,7 +130,6 @@ class CountrySerializer(serializers.ModelSerializer):
 
 class RealtySerializer(serializers.ModelSerializer):
     city = CitySerializer(read_only=True)
-    country = CountrySerializer(source='city.country', read_only=True)
     group = serializers.CharField(source='realty_group.name')
 
     feedbacks = FeedbackSerializer(many=True, read_only=True)
@@ -117,23 +151,28 @@ class RealtySerializer(serializers.ModelSerializer):
             'slug',
             'price',
             'city',
-            'country',
             'group',
             'accRates',
             'feedbacks',
             'booking_items',
             'images',
         )
-        
+
     def get_accRates(self, obj):
-        avg = 0
+        avg = 0.0
+        count = 0
 
         if hasattr(obj, "avg_rating") and obj.avg_rating is not None:
             avg = round(float(obj.avg_rating), 2)
 
-        return {
-            "avgRate": avg
-        }
+        if hasattr(obj, "rates_count") and obj.rates_count is not None:
+            count = int(obj.rates_count)
+
+        return AccRatesSerializer({
+            "avgRate": avg,
+            "countRate": count
+        }).data
+
 
 class UserRoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -147,26 +186,38 @@ class UserRoleSerializer(serializers.ModelSerializer):
             'can_delete',
         )
 
-class CardSerializer(serializers.ModelSerializer):
+
+
+class BookingRealtyNameSerializer(serializers.ModelSerializer):
+    city = CitySerializer(read_only=True)
     class Meta:
-        model = Card
+        model = Realty
         fields = (
-            'id',
-            'number',
-            'cardholder_name',
-            'expiration_date',
+            "name",
+            "city",
+            "price",
         )
 
 class BookingItemShortSerializer(serializers.ModelSerializer):
-    realty_name = serializers.CharField(source='realty.name')
+    realty = BookingRealtyNameSerializer(read_only=True)
+    startDate = serializers.DateTimeField(source="start_date")
+    endDate = serializers.DateTimeField(source="end_date")
+
+    images = serializers.SlugRelatedField(
+        source="realty.images",
+        many=True,
+        read_only=True,
+        slug_field="url"
+    )
 
     class Meta:
         model = BookingItem
         fields = (
-            'id',
-            'start_date',
-            'end_date',
-            'realty_name',
+            "id",
+            "startDate",
+            "endDate",
+            "realty",
+            "images",
         )
 
 class FeedbackShortSerializer(serializers.ModelSerializer):
@@ -182,20 +233,6 @@ class FeedbackShortSerializer(serializers.ModelSerializer):
             'realty_name',
         )
 
-class UserDataSerializer(serializers.ModelSerializer):
-    cards = CardSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = UserData
-        fields = (
-            'id',
-            'first_name',
-            'last_name',
-            'email',
-            'birth_date',
-            'registered_at',
-            'cards',
-        )
 
 class UserDetailSerializer(serializers.ModelSerializer):
     user_data = UserDataSerializer(read_only=True)
@@ -226,3 +263,40 @@ class RealtySearchSerializer(serializers.Serializer):
 
 class AccRatesSerializer(serializers.Serializer):
     avgRate = serializers.FloatField()
+    countRate = serializers.IntegerField() 
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    firstName = serializers.CharField(source="user_data.first_name")
+    lastName = serializers.CharField(source="user_data.last_name")
+    email = serializers.EmailField(source="user_data.email")
+    birthdate = serializers.DateField(source="user_data.birth_date", allow_null=True)
+    registeredAt = serializers.DateTimeField(source="user_data.registered_at")
+
+    role = serializers.CharField(source="user_role.id")
+
+    cards = CardSerializer(
+        source="user_data.cards",
+        many=True,
+        read_only=True
+    )
+
+    bookingItems = BookingItemShortSerializer(
+        source="booking_items",
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = UserAccess
+        fields = (
+            "id",
+            "login",
+            "role",
+            "firstName",
+            "lastName",
+            "email",
+            "birthdate",
+            "registeredAt",
+            "cards",
+            "bookingItems",
+        )

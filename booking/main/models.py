@@ -89,7 +89,6 @@ class UserAccess(models.Model):
         return self.login
 
 
-
 class ItemImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
@@ -177,6 +176,7 @@ class Card(models.Model):
     class Meta:
         db_table = "cards"
 
+
 class Country(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
@@ -187,6 +187,7 @@ class Country(models.Model):
     def __str__(self):
         return self.name
     
+
 class City(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
