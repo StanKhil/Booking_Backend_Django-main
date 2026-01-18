@@ -1,5 +1,8 @@
 from django.urls import path, include
-from main.views import *
+from main.views.user import userDetail, authenticate as login, register
+from main.views.realty import RealtyViewSet, item, RealtySearchViewSet
+from main.views.feedback import FeedbackView
+from main.views.booking import BookingView, BookingDetailView
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
