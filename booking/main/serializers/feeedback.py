@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from main.models import *
-from main.serializers.user import UserDataSerializer
+from main.serializers.common import UserDataSerializer
 
 class FeedbackShortSerializer(serializers.ModelSerializer):
     realty_name = serializers.CharField(source='realty.name')

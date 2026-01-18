@@ -1,31 +1,9 @@
 from rest_framework import serializers
 from main.models import *
-from main.serializers import BookingItemShortSerializer, FeedbackShortSerializer
+from main.serializers.booking import BookingItemShortSerializer
+from main.serializers.feeedback import FeedbackShortSerializer
+from main.serializers.common import UserDataSerializer, CardSerializer
 
-class CardSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Card
-        fields = (
-            'id',
-            'number',
-            'cardholder_name',
-            'expiration_date',
-        )
-
-class UserDataSerializer(serializers.ModelSerializer):
-    cards = CardSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = UserData
-        fields = (
-            'id',
-            'first_name',
-            'last_name',
-            'email',
-            'birth_date',
-            'registered_at',
-            'cards',
-        )
 
 class UserRoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,24 +17,24 @@ class UserRoleSerializer(serializers.ModelSerializer):
             'can_delete',
         )
 
-class UserDetailSerializer(serializers.ModelSerializer):
-    user_data = UserDataSerializer(read_only=True)
-    user_role = UserRoleSerializer(read_only=True)
+# class UserDetailSerializer(serializers.ModelSerializer):
+#     user_data = UserDataSerializer(read_only=True)
+#     user_role = UserRoleSerializer(read_only=True)
 
-    booking_items = BookingItemShortSerializer(many=True, read_only=True)
-    feedbacks = FeedbackShortSerializer(many=True, read_only=True)
+#     booking_items = BookingItemShortSerializer(many=True, read_only=True)
+#     feedbacks = FeedbackShortSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = UserAccess
-        fields = (
-            'id',
-            'login',
-            'created_at',
-            'user_role',
-            'user_data',
-            'booking_items',
-            'feedbacks',
-        )
+#     class Meta:
+#         model = UserAccess
+#         fields = (
+#             'id',
+#             'login',
+#             'created_at',
+#             'user_role',
+#             'user_data',
+#             'booking_items',
+#             'feedbacks',
+#         )
 
 class UserDetailSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(source="user_data.first_name")
