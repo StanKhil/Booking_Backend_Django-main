@@ -17,6 +17,7 @@ from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Avg, Count
+from django.db.models.functions import Coalesce
 from backend.services import *
 
 storageService = DiskStorageService()
@@ -102,15 +103,11 @@ def RealtySearchViewSet(request):
         )
 
     queryset = queryset.annotate(
-        avg_rating=Avg("feedbacks__rate")
+        avg_rating=Coalesce(Avg("feedbacks__rate"), 0.0)
     )
 
     if "Rating" in data:
-        queryset = queryset.annotate(
-            avg_rating=Avg("feedbacks__rate")
-        ).filter(
-            avg_rating__gte=data["Rating"]
-        )
+        queryset = queryset.filter(avg_rating__gte=data["Rating"])
 
     queryset = queryset.distinct()
 
