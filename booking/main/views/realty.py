@@ -19,7 +19,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Avg, Count
 from django.db.models.functions import Coalesce
 from backend.services import *
-
+from django.shortcuts import get_object_or_404
 
 storageService = DiskStorageService()
 
@@ -77,7 +77,6 @@ class RealtyViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
 
-
         image_file = request.FILES.get("realty-img")
         if not image_file:
             return Response(
@@ -89,7 +88,7 @@ class RealtyViewSet(ModelViewSet):
 
         itemImage = ItemImage(
             image_url=saved_name,
-            order=1,
+            order=0,
             realty=instance
         )
         itemImage.save()
@@ -99,6 +98,48 @@ class RealtyViewSet(ModelViewSet):
             data=serializer.data
         )
         return Response(response.to_dict(), status=status.HTTP_201_CREATED)
+    
+    def patch(self, request, *args, **kwargs):
+        slug = request.data.get('realty-former-slug')
+        instance = get_object_or_404(Realty, slug=slug)
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        try:
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+
+                if 'realty-main-image' in request.FILES:
+                    image_file = request.FILES.get("realty-img")
+                    if not image_file:
+                        return Response(
+                            {"error": "Image is required"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    saved_name = storageService.saveItem(image_file)
+
+                    itemImage = ItemImage(
+                        image_url=saved_name,
+                        order=0,
+                        realty=instance
+                    )
+                    itemImage.save()
+            else:
+                raise Exception
+
+            response = RestResponse(
+                status=RestStatus(True, 200, "Ok"),
+                data=serializer.data
+            )
+            return Response(response.to_dict(), status=status.HTTP_200_OK)
+        except:
+            response = RestResponse(
+                status=RestStatus(False, 400, "Bad Request"),
+                data=serializer.errors
+            )
+            return Response(response.to_dict(), status=status.HTTP_400_BAD_REQUEST)
+
     
 
 @api_view(["POST"])
@@ -135,3 +176,4 @@ def RealtySearchViewSet(request):
     )
 
     return Response(response.to_dict(), status=status.HTTP_200_OK)
+

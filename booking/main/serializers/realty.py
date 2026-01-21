@@ -6,6 +6,7 @@ from main.serializers.location import CitySerializer
 from main.serializers.booking import BookingItemSerializer
 from django.urls import reverse
 from django.conf import settings
+from main.models import RealtyGroup # Import your group model
 
 
 class RealtySearchSerializer(serializers.Serializer):
@@ -107,6 +108,20 @@ class RealtySerializer(serializers.ModelSerializer):
             'booking_items',
             'images',
         )
+
+    def update(self, instance, validated_data):
+        group_data = validated_data.pop('realty-group', None)
+        if group_data:
+            group_name = group_data.get('name')
+            group_obj = RealtyGroup.objects.filter(name=group_name).first()
+            if group_obj:
+                instance.realty_group = group_obj
+                
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
 
     def get_images(self, obj):
         request = self.context.get("request")

@@ -75,7 +75,7 @@ def authenticate(request):
         raise ValueError(f"Authorization scheme error: '{authorizationScheme}' only")
     
     credentials = authorizationHeader[len(authorizationScheme):]
-    print("Credentials:", credentials)
+
     decoded = ""
     try:
         decoded = base64.b64decode(credentials).decode('utf-8')
