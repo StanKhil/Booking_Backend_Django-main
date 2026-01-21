@@ -1,9 +1,11 @@
 from rest_framework import serializers
 from main.models import *
-from main.serializers.user import UserDataSerializer
+#from main.serializers.user import UserDataSerializer
 from main.serializers.feeedback import FeedbackSerializer, AccRatesSerializer
 from main.serializers.location import CitySerializer
 from main.serializers.booking import BookingItemSerializer
+from django.urls import reverse
+from django.conf import settings
 
 
 class RealtySearchSerializer(serializers.Serializer):
@@ -86,12 +88,8 @@ class RealtySerializer(serializers.ModelSerializer):
 
     feedbacks = FeedbackSerializer(many=True, read_only=True)
     booking_items = BookingItemSerializer(many=True, read_only=True)
-    images = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='url'
-    )
 
+    images = serializers.SerializerMethodField()
     accRates = serializers.SerializerMethodField()
 
     class Meta:
@@ -109,6 +107,23 @@ class RealtySerializer(serializers.ModelSerializer):
             'booking_items',
             'images',
         )
+
+    def get_images(self, obj):
+        request = self.context.get("request")
+        result = []
+
+        for img in obj.images.all():
+            url = f"{settings.SITE_URL}{reverse('storageItem', kwargs={'itemId': img.image_url})}"
+
+            if request:
+                url = request.build_absolute_uri(url)
+
+            result.append({
+                "imageUrl": url
+            })
+
+        return result
+
 
     def get_accRates(self, obj):
         avg = 0.0

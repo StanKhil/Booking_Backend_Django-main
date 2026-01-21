@@ -1,5 +1,5 @@
 from django.http import HttpResponse, Http404
-from django.http import JsonResponse
+#from django.http import JsonResponse
 from main.models import *
 from main.rest import *
 from main.serializers.user import *
@@ -8,14 +8,14 @@ from main.serializers.realty import *
 from main.serializers.feeedback import *
 from main.serializers.location import *
 from main.filters import *
-from typing import Dict, Any
+#from typing import Dict, Any
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.views import APIView
+#from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
-from django.views.decorators.csrf import csrf_exempt
+#from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Avg, Count
 from django.db.models.functions import Coalesce
 from backend.services import *
@@ -77,15 +77,28 @@ class RealtyViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
 
-        #itemImage = ItemImage.objects.create(
-        #    image_url = DiskStorageService.
-        #)
+
+        image_file = request.FILES.get("realty-img")
+        if not image_file:
+            return Response(
+                {"error": "Image is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        saved_name = storageService.saveItem(image_file)
+
+        itemImage = ItemImage(
+            image_url=saved_name,
+            order=1,
+            realty=instance
+        )
+        itemImage.save()
 
         response = RestResponse(
             status=RestStatus(True, 201, "Created"),
             data=serializer.data
         )
-        return Response(data=response.to_dict(), status=status.HTTP_201_CREATED)
+        return Response(response.to_dict(), status=status.HTTP_201_CREATED)
     
 
 @api_view(["POST"])

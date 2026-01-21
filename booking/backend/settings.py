@@ -12,18 +12,26 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = 'resources/'
 
+SITE_URL = "http://127.0.0.1:8000/"
+
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'assets'),
 ]
 
 # SPECIFY YOUR STORAGE PATH
-STORAGE_PATH = "D:\C#\ASP\BookingStorage"
+load_dotenv(BASE_DIR / ".env")
+
+STORAGE_PATH = os.getenv("STORAGE_PATH")
+
+if not STORAGE_PATH:
+    raise RuntimeError("STORAGE_PATH is not set in .env")
 
 
 

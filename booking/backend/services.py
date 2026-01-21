@@ -146,9 +146,12 @@ class DiskStorageService(IStorageService):
         ext = self._getFileExtension(formFile.name)
         savedName = f"{uuid.uuid4()}{ext}"
         path = self.basePath / savedName
+
         with open(path, 'wb+') as destination:
             for chunk in formFile.chunks():
                 destination.write(chunk)
+
+        return savedName
     
     def _getFileExtension(self, filename: str) -> str:
         dotIndex = filename.rfind(".")

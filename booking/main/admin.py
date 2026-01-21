@@ -29,4 +29,4 @@ class RealtyAdmin(admin.ModelAdmin):
 
 @admin.register(ItemImage)
 class ItemImageAdmin(admin.ModelAdmin):
-    list_display = ("id", "image_url", "order")
+    list_display = ("id", "image_url", "order", "realty", "realty_id")
