@@ -180,7 +180,7 @@ def login(request):
     try:
         userAccess = authenticate(request)
     except Exception as e:
-        responseObj = RestResponse(status=RestStatus(False, 401, "Unauthorized"), data=jwt)
+        responseObj = RestResponse(status=RestStatus(False, 401, "Unauthorized"), data={"error": e.__str__()})
         return JsonResponse(responseObj.to_dict(), safe=False)
     
     now = int(time.time())
